@@ -97,10 +97,16 @@ with col1:
             with st.chat_message("user"):
                 st.write(user_input)
 
-            # Generate Gemini Response
+           # Generate Gemini Response
             try:
                 genai.configure(api_key=api_key)
-                model = genai.GenerativeModel("gemini-2.5-flash", system_instruction=SYSTEM_PROMPT)
+                
+                # Auto-detect an available Gemini model for your API key
+                all_models = [m.name for m in genai.list_models() if "generateContent" in m.supported_generation_methods]
+                flash_models = [m for m in all_models if "flash" in m]
+                model_name = flash_models[0] if flash_models else all_models[0]
+                
+                model = genai.GenerativeModel(model_name, system_instruction=SYSTEM_PROMPT)
                 
                 # Format history for Gemini
                 formatted_history = []
@@ -118,7 +124,6 @@ with col1:
 
             except Exception as e:
                 st.error(f"Error connecting to Gemini API: {str(e)}")
-
 # Right Column: CAB Database Intake Form
 with col2:
     st.markdown('<div class="main-header">📝 CAB Client Record Form</div>', unsafe_allow_html=True)
