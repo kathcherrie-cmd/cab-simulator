@@ -97,17 +97,21 @@ with col1:
             with st.chat_message("user"):
                 st.write(user_input)
 
-           # Generate Gemini Response
+         # Generate Gemini Response
             try:
                 genai.configure(api_key=api_key)
+
+                # Dynamically fetch available generation models for your API key
+                available_models = [
+                    m.name for m in genai.list_models()
+                    if "generateContent" in m.supported_generation_methods
+                ]
                 
-                # Auto-detect an available Gemini model for your API key
-                all_models = [m.name for m in genai.list_models() if "generateContent" in m.supported_generation_methods]
-                flash_models = [m for m in all_models if "flash" in m]
-                model_name = flash_models[0] if flash_models else all_models[0]
-                
-                model = genai.GenerativeModel(model_name, system_instruction=SYSTEM_PROMPT)
-                
+                # Pick the best available Flash model, or fall back to the first supported model
+                chosen_model = next((m for m in available_models if "flash" in m.lower()), available_models[0])
+
+                model = genai.GenerativeModel(chosen_model, system_instruction=SYSTEM_PROMPT)
+
                 # Format history for Gemini
                 formatted_history = []
                 for msg in st.session_state.messages[:-1]:
